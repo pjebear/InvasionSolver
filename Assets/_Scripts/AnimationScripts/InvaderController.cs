@@ -69,22 +69,23 @@ public class InvaderController : MonoBehaviour {
         StartCoroutine(_MoveToPosition(localPosition, inSeconds));
     }
 
-    private IEnumerator _MoveToPosition(Vector3 localPosition, float inSeconds)
+    private IEnumerator _MoveToPosition(Vector3 globalPosition, float inSeconds)
     {
-        Vector3 delta = localPosition - transform.localPosition;        
+        // move to the local position of the transform
+        Vector3 delta = globalPosition - transform.position;        
         delta /= inSeconds;
         float deltaDistance = delta.magnitude;
 
         while (true)
         {
-            Vector3 remaining = localPosition - transform.localPosition;
+            Vector3 remaining = globalPosition - transform.position;
             if (remaining.sqrMagnitude <= deltaDistance * Time.deltaTime)
             {
                 break;
             }
             else
             {
-                transform.localPosition += delta * Time.deltaTime;
+                transform.position += delta * Time.deltaTime;
             }
             yield return new WaitForFixedUpdate();
         }

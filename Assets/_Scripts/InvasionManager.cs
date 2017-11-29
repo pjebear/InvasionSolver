@@ -28,9 +28,9 @@ class InvasionManager : MonoBehaviour
 
     public Text BestSolutionFoundText;
     public Text DefaultSolutionFoundText;
-    public Text OpenLeafsText;
+    public Text NumLeafsCreatedText;
     public Text NumberOfSolutionsText;
-    public GameObject SolvingBanner;
+    public Text BannerText;
 
     private AndTree mAndTree;
     private SearchResults mSearchResults;
@@ -72,8 +72,8 @@ class InvasionManager : MonoBehaviour
         {
             Debug.Log("Searching For Optimal Solution...");
             mAndTree = new AndTree();
-            NationBlueprint initialNation = new NationBlueprint(3);
-            ArmyBlueprint initialArmy = new ArmyBlueprint(2, 1, 3);
+            NationBlueprint initialNation = new NationBlueprint(6);
+            ArmyBlueprint initialArmy = new ArmyBlueprint(2, 2, 3);
 
             // Display Army
             mMainArmy.gameObject.SetActive(true);
@@ -91,7 +91,7 @@ class InvasionManager : MonoBehaviour
     {
         if (!mSimulationRunning)
         {
-            SolvingBanner.gameObject.SetActive(false);
+            BannerText.gameObject.SetActive(false);
         }
         if (mAnimationStart && mSimulationRunning)
         {
@@ -100,6 +100,10 @@ class InvasionManager : MonoBehaviour
             if (mSearchResults.OptimizedSolution != null)
             {
                 InvasionSolution solution = mSearchResults.OptimizedSolution;
+                BestSolutionFoundText.text = mSearchResults.OptimizedSolutionWaves.ToString();
+                DefaultSolutionFoundText.text = mSearchResults.DefaultSolutionWaves.ToString();
+                NumberOfSolutionsText.text = mSearchResults.NumSolutionsFound.ToString();
+                NumLeafsCreatedText.text = mSearchResults.NumLeafsCreated.ToString();
                 solution.Save();
                 StartCoroutine(AnimateInvasion(solution));
             }
@@ -146,7 +150,8 @@ class InvasionManager : MonoBehaviour
 
         List<InvasionWave> bestSolution = solution.InvasionOrder;
         for (int i = 0; i < bestSolution.Count; ++i)
-        { 
+        {
+            BannerText.text = "WAVE " + i;
             List<AssaultTemplate> attackWave = bestSolution[i].Wave;
             Debug.Assert(DefaultArmyNumber >= attackWave.Count);
             List<ArmyBlueprint> subArmies = new List<ArmyBlueprint>();
@@ -176,6 +181,7 @@ class InvasionManager : MonoBehaviour
             MergeSubArmies(reformAnimationDuration);
             yield return new WaitForSeconds(reformAnimationDuration * 1.5f);
         }
+        BannerText.text = "Invasion Complete!";
     }
 
     private void FormSubArmies(List<ArmyBlueprint> subArmies, float animationSpeed)

@@ -8,7 +8,7 @@ class ArmyPositionControl : MonoBehaviour
 {
     public InvaderController InvaderPrefab;
     public Vector2 BoundingArea;
-
+   
     private Dictionary<InvaderType, List<InvaderController>> mInvaderControllers;
     private Vector3 mInvaderControllerDimensions;
 
@@ -23,19 +23,19 @@ class ArmyPositionControl : MonoBehaviour
         Initialize();
         foreach (ushort archer in army.Archers)
         {
-            InvaderController controller = Instantiate(InvaderPrefab, transform);
+            InvaderController controller = Instantiate(InvaderPrefab, transform.parent);
             controller.Initialize(archer, InvaderType.Archer);
             mInvaderControllers[InvaderType.Archer].Add(controller);
         }
         foreach (ushort healer in army.Healers)
         {
-            InvaderController controller = Instantiate(InvaderPrefab, transform);
+            InvaderController controller = Instantiate(InvaderPrefab, transform.parent);
             controller.Initialize(healer, InvaderType.Healer);
             mInvaderControllers[InvaderType.Healer].Add(controller);
         }
         foreach (ushort soldier in army.Soldiers)
         {
-            InvaderController controller = Instantiate(InvaderPrefab, transform);
+            InvaderController controller = Instantiate(InvaderPrefab, transform.parent);
             controller.Initialize(soldier, InvaderType.Soldier);
             mInvaderControllers[InvaderType.Soldier].Add(controller);
         }
@@ -59,7 +59,6 @@ class ArmyPositionControl : MonoBehaviour
                     if (controller.CurrentHealth > 0)
                     {
                         newArmy[invaderGroupPair.Key].Add(controller);
-                        controller.transform.SetParent(transform);
                         controller.CanBeUsed = true;
                     }
                     else
@@ -96,7 +95,6 @@ class ArmyPositionControl : MonoBehaviour
         {
             foreach (InvaderController controller in controllers)
             {
-                controller.transform.SetParent(transform);
                 controller.CanBeUsed = true;
             }
         }
@@ -164,12 +162,12 @@ class ArmyPositionControl : MonoBehaviour
                 Vector3 positionInArmy = new Vector3(columnCount * mInvaderControllerDimensions.x, -count * mInvaderControllerDimensions.y);
                 if (overSeconds > 0)
                 {
-                    controller.MoveToPosition(positionInArmy, overSeconds);
+                    controller.MoveToPosition(transform.position + positionInArmy, overSeconds);
                     //controller.transform.localPosition = positionInArmy;
                 }
                 else // set at position
                 {
-                    controller.transform.localPosition = positionInArmy;
+                    controller.transform.position = transform.position + positionInArmy;
                 }
 
                 count++;

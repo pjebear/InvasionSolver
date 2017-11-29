@@ -8,12 +8,13 @@
           <Attackers>
             <Soldiers>
               <unsignedShort>100</unsignedShort>
-              <unsignedShort>100</unsignedShort>
             </Soldiers>
             <Healers />
-            <Archers />
+            <Archers>
+              <unsignedShort>50</unsignedShort>
+            </Archers>
           </Attackers>
-          <mCalculatedFortDamage>80</mCalculatedFortDamage>
+          <mCalculatedFortDamage>53</mCalculatedFortDamage>
         </AssaultTemplate>
         <AssaultTemplate>
           <ToAssault Position="3" IsPlaceHolderFort="false" FortificationId="1" />
@@ -31,10 +32,54 @@
         <AssaultTemplate>
           <ToAssault Position="6" IsPlaceHolderFort="false" FortificationId="2" />
           <Attackers>
+            <Soldiers>
+              <unsignedShort>100</unsignedShort>
+            </Soldiers>
+            <Healers>
+              <unsignedShort>40</unsignedShort>
+            </Healers>
+            <Archers>
+              <unsignedShort>50</unsignedShort>
+            </Archers>
+          </Attackers>
+          <mCalculatedFortDamage>53</mCalculatedFortDamage>
+        </AssaultTemplate>
+      </Wave>
+    </InvasionWave>
+    <InvasionWave>
+      <Wave>
+        <AssaultTemplate>
+          <ToAssault Position="1" IsPlaceHolderFort="false" FortificationId="3" />
+          <Attackers>
+            <Soldiers>
+              <unsignedShort>47</unsignedShort>
+              <unsignedShort>57</unsignedShort>
+            </Soldiers>
+            <Healers />
+            <Archers />
+          </Attackers>
+          <mCalculatedFortDamage>80</mCalculatedFortDamage>
+        </AssaultTemplate>
+        <AssaultTemplate>
+          <ToAssault Position="4" IsPlaceHolderFort="false" FortificationId="4" />
+          <Attackers>
+            <Soldiers />
+            <Healers>
+              <unsignedShort>40</unsignedShort>
+            </Healers>
+            <Archers>
+              <unsignedShort>50</unsignedShort>
+            </Archers>
+          </Attackers>
+          <mCalculatedFortDamage>80</mCalculatedFortDamage>
+        </AssaultTemplate>
+        <AssaultTemplate>
+          <ToAssault Position="7" IsPlaceHolderFort="false" FortificationId="5" />
+          <Attackers>
             <Soldiers />
             <Healers />
             <Archers>
-              <unsignedShort>50</unsignedShort>
+              <unsignedShort>10</unsignedShort>
               <unsignedShort>50</unsignedShort>
             </Archers>
           </Attackers>
@@ -50,6 +95,7 @@
     </Soldiers>
     <Healers>
       <unsignedShort>40</unsignedShort>
+      <unsignedShort>40</unsignedShort>
     </Healers>
     <Archers>
       <unsignedShort>50</unsignedShort>
@@ -62,6 +108,9 @@
       <Fortification Position="0" IsPlaceHolderFort="false" FortificationId="0" />
       <Fortification Position="3" IsPlaceHolderFort="false" FortificationId="1" />
       <Fortification Position="6" IsPlaceHolderFort="false" FortificationId="2" />
+      <Fortification Position="1" IsPlaceHolderFort="false" FortificationId="3" />
+      <Fortification Position="4" IsPlaceHolderFort="false" FortificationId="4" />
+      <Fortification Position="7" IsPlaceHolderFort="false" FortificationId="5" />
     </Fortifications>
   </NationBlueprint>
 </InvasionSolution>

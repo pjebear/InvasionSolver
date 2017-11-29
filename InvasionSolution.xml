@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<InvasionSolution xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <InvasionOrder>
+    <InvasionWave>
+      <Wave>
+        <AssaultTemplate>
+          <ToAssault Position="0" IsPlaceHolderFort="false" FortificationId="0" />
+          <Attackers>
+            <Soldiers>
+              <unsignedShort>100</unsignedShort>
+              <unsignedShort>100</unsignedShort>
+            </Soldiers>
+            <Healers />
+            <Archers />
+          </Attackers>
+          <mCalculatedFortDamage>80</mCalculatedFortDamage>
+        </AssaultTemplate>
+        <AssaultTemplate>
+          <ToAssault Position="3" IsPlaceHolderFort="false" FortificationId="1" />
+          <Attackers>
+            <Soldiers />
+            <Healers>
+              <unsignedShort>40</unsignedShort>
+            </Healers>
+            <Archers>
+              <unsignedShort>50</unsignedShort>
+            </Archers>
+          </Attackers>
+          <mCalculatedFortDamage>80</mCalculatedFortDamage>
+        </AssaultTemplate>
+        <AssaultTemplate>
+          <ToAssault Position="6" IsPlaceHolderFort="false" FortificationId="2" />
+          <Attackers>
+            <Soldiers />
+            <Healers />
+            <Archers>
+              <unsignedShort>50</unsignedShort>
+              <unsignedShort>50</unsignedShort>
+            </Archers>
+          </Attackers>
+          <mCalculatedFortDamage>39</mCalculatedFortDamage>
+        </AssaultTemplate>
+      </Wave>
+    </InvasionWave>
+  </InvasionOrder>
+  <ArmyBlueprint>
+    <Soldiers>
+      <unsignedShort>100</unsignedShort>
+      <unsignedShort>100</unsignedShort>
+    </Soldiers>
+    <Healers>
+      <unsignedShort>40</unsignedShort>
+    </Healers>
+    <Archers>
+      <unsignedShort>50</unsignedShort>
+      <unsignedShort>50</unsignedShort>
+      <unsignedShort>50</unsignedShort>
+    </Archers>
+  </ArmyBlueprint>
+  <NationBlueprint NationSize="3">
+    <Fortifications>
+      <Fortification Position="0" IsPlaceHolderFort="false" FortificationId="0" />
+      <Fortification Position="3" IsPlaceHolderFort="false" FortificationId="1" />
+      <Fortification Position="6" IsPlaceHolderFort="false" FortificationId="2" />
+    </Fortifications>
+  </NationBlueprint>
+</InvasionSolution>

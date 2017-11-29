@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<ArmyBlueprint xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Soldiers>
+    <unsignedShort>100</unsignedShort>
+    <unsignedShort>100</unsignedShort>
+  </Soldiers>
+  <Healers>
+    <unsignedShort>40</unsignedShort>
+  </Healers>
+  <Archers>
+    <unsignedShort>50</unsignedShort>
+    <unsignedShort>50</unsignedShort>
+    <unsignedShort>50</unsignedShort>
+  </Archers>
+</ArmyBlueprint>

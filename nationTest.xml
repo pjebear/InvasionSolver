@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<NationBlueprint xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" NationSize="3">
+  <Fortifications>
+    <Fortification Position="0" IsPlaceHolderFort="false" FortificationId="0" />
+    <Fortification Position="3" IsPlaceHolderFort="false" FortificationId="1" />
+    <Fortification Position="6" IsPlaceHolderFort="false" FortificationId="2" />
+    <Fortification Position="1" IsPlaceHolderFort="false" FortificationId="3" />
+    <Fortification Position="4" IsPlaceHolderFort="false" FortificationId="4" />
+    <Fortification Position="7" IsPlaceHolderFort="false" FortificationId="5" />
+  </Fortifications>
+</NationBlueprint>

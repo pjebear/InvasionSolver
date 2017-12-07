@@ -2,18 +2,20 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Collections;
+using System.Xml.Serialization;
+using System.IO;
 
 namespace InvasionSolver
 {
-    class SearchResults
+    [XmlRoot("SearchResults")]
+    public class SearchResults
     {
+        public const string FILE_PATH = "InvasionResults.xml";
         // add optimization bools
         public float SearchTimeSeconds { get; private set; }
         public long NumLeafsCreated { get; private set; }
         public long NumSolutionsFound { get; private set; }
-        public int DefaultSolutionWaves { get; private set; }
         public InvasionSolution DefaultSolution { get; private set; }
-        public int OptimizedSolutionWaves { get; private set; }
         public InvasionSolution OptimizedSolution { get; private set; }
 
         public SearchResults()
@@ -22,16 +24,32 @@ namespace InvasionSolver
         }
 
         public SearchResults(float searchTimeSeconds, long numLeafsCreated, long numSolutionsFound, 
-            int defaultSolutionWaves, InvasionSolution defaultSolution,
-            int optimizedSolutionWaves, InvasionSolution optimizedSolution)
+             InvasionSolution defaultSolution,
+             InvasionSolution optimizedSolution)
         {
             SearchTimeSeconds = searchTimeSeconds;
             NumLeafsCreated = numLeafsCreated;
             NumSolutionsFound = numSolutionsFound;
-            DefaultSolutionWaves = defaultSolutionWaves;
             DefaultSolution = defaultSolution;
-            OptimizedSolutionWaves = optimizedSolutionWaves;
             OptimizedSolution = optimizedSolution;
+        }
+
+        public void Save()
+        {
+            var serializer = new XmlSerializer(typeof(SearchResults));
+            using (var fileStream = new FileStream(FILE_PATH, FileMode.Create))
+            {
+                serializer.Serialize(fileStream, this);
+            }
+        }
+
+        public static SearchResults Load()
+        {
+            var serializer = new XmlSerializer(typeof(SearchResults));
+            using (var fileStream = new FileStream(FILE_PATH, FileMode.Open))
+            {
+                return serializer.Deserialize(fileStream) as SearchResults;
+            }
         }
     }
 
@@ -40,9 +58,12 @@ namespace InvasionSolver
         private int mMaxDepthOfTree;
         private bool mPruneSolutions; // optimization
 
-        private Stack<SearchState> mOpenLeafs;
+        private LinkedList<SearchState> mOpenLeafs;
         private long mNumLeafsCreated;
         private long mNumSolutionsFound;
+
+        private float mBestPartialSolutionValue;
+        private SearchState mBestPartialSolution;
 
         private float mBestSolutionArmyValue;
         private int mBestSolutionDepth;
@@ -53,7 +74,7 @@ namespace InvasionSolver
 
         public AndTree()
         {
-            mOpenLeafs = new  Stack<SearchState>();
+            mOpenLeafs = new  LinkedList<SearchState>();
         }
 
         public SearchResults SearchForSolutions(ArmyBlueprint attackers, NationBlueprint defenders, bool keepOnlyBest)
@@ -67,38 +88,63 @@ namespace InvasionSolver
             initialState.Prob.NationBlueprint.BeginInvasion(Vector2.right);
 
             // Do the default search keeping the units together
-            mOpenLeafs.Push(initialState);
+            mOpenLeafs.AddLast(initialState);
             // only care about the best solution with army grouped up
             mPruneSolutions = true;
-            mMaxDepthOfTree = -1;
+            mMaxDepthOfTree = mBestSolutionDepth = -1;
             while (mOpenLeafs.Count > 0)
             {
-                Search(mOpenLeafs.Pop(), true);
+                SearchState pop = mOpenLeafs.Last.Value;
+                mOpenLeafs.RemoveLast();
+                Search(pop, true);
             }
             // record default invasion stats
-            InvasionSolution defaultSolution = mBestSolution;
+            InvasionSolution defaultSolution = null;
+            if (mBestSolution == null)
+            {
+                defaultSolution = ToSolution(mBestPartialSolution, mInitialArmy, mInitialNation);
+            }
+            else
+            {
+                defaultSolution = mBestSolution;
+            }
+            
             int bestDefaultDepth = defaultSolution != null ? mBestSolutionDepth : -1;
             // update the max depth of the optimized search to be the depth of the default time
-            mMaxDepthOfTree = mBestSolutionDepth;
+            mMaxDepthOfTree = bestDefaultDepth;
             Debug.Log("Best Case Group Scenario took " + mMaxDepthOfTree + " turns to complete, needing " + (mMaxDepthOfTree - initialState.Prob.NationBlueprint.NumCitiesRemaining) + " turns to heal");
 			
             // reset search variables for the optimized search
             mPruneSolutions = keepOnlyBest;
             mOpenLeafs.Clear();
             mBestSolution = null;
+            mBestPartialSolution = null;
 
             float searchStartTime = Time.realtimeSinceStartup;
-            mOpenLeafs.Push(initialState);
+            mOpenLeafs.AddLast(initialState);
             mNumLeafsCreated = 1;
             while (mOpenLeafs.Count > 0)
             {
-				Search(mOpenLeafs.Pop(), false);
+                SearchState pop = mOpenLeafs.Last.Value;
+                mOpenLeafs.RemoveLast();
+                Search(pop, false);
             }
             float optimizedSearchDuration = Time.realtimeSinceStartup - searchStartTime;
-            InvasionSolution optimizedSolution = mBestSolution;
+
+            // Record optimized Solution
+            InvasionSolution optimizedSolution = null;
+            if (mBestSolution == null)
+            {
+                optimizedSolution = ToSolution(mBestPartialSolution, mInitialArmy, mInitialNation);
+            }
+            else
+            {
+                optimizedSolution = mBestSolution;
+            }
+
             int bestOptimizedDepth = optimizedSolution != null ? mBestSolutionDepth : -1;
             return new SearchResults(optimizedSearchDuration, mNumLeafsCreated, mNumSolutionsFound, 
-                bestDefaultDepth, defaultSolution, bestOptimizedDepth, optimizedSolution);
+                 defaultSolution, optimizedSolution);
         }
 
         public void Search(SearchState chosenState, bool keepArmyTogether)
@@ -151,16 +197,7 @@ namespace InvasionSolver
                 // Create and store new solution 
                 if (updateSolution)
                 {
-                    List <InvasionWave> invasionOrder = new List<InvasionWave>();
-                    while (chosenState.TransitionFromParent != null)
-                    {
-                        invasionOrder.Add(chosenState.TransitionFromParent);
-                        chosenState = chosenState.ParentProblem;
-                    }
-                    invasionOrder.Reverse();
-                    InvasionSolution newSolution = new InvasionSolution(mInitialArmy, mInitialNation, invasionOrder);
-                   
-                    mBestSolution = newSolution;
+                    mBestSolution = ToSolution(chosenState, mInitialArmy, mInitialNation);
                     mBestSolutionDepth = numStepsInInvasion;
                     mBestSolutionArmyValue = chosenState.Prob.InvadingArmy.CalculateArmyValue();
                 }
@@ -168,6 +205,28 @@ namespace InvasionSolver
             }
             else
             {
+                if (mBestSolution == null) // record partial solutions until an actual solution is found
+                {
+                    if (mBestPartialSolution == null)
+                    {
+                        mBestPartialSolution = chosenState;
+                        mBestPartialSolutionValue = chosenState.Prob.ProblemValue;
+                    }
+                    else
+                    {
+                        // only update partial solution if it was able to take more cities than the previous, regardless of better army value
+                        if (chosenState.Prob.NationBlueprint.NumCitiesRemaining < mBestPartialSolution.Prob.NationBlueprint.NumCitiesRemaining)
+                        {
+                            float probValue = chosenState.Prob.ProblemValue;
+                            if (probValue < mBestPartialSolutionValue)
+                            {
+                                mBestPartialSolution = chosenState;
+                                mBestPartialSolutionValue = probValue;
+                            }
+                        }
+                    }
+                }
+
                 bool validState = true;
                 if (chosenState.ParentProblem != null)
                 {
@@ -189,7 +248,7 @@ namespace InvasionSolver
                     mNumLeafsCreated += subProblems.Count;
                     foreach (SearchState subProblem in subProblems)
                     {
-                        mOpenLeafs.Push(subProblem);
+                        mOpenLeafs.AddLast(subProblem);
                     }
                 }
             }
@@ -359,6 +418,21 @@ namespace InvasionSolver
                 }
             }
         }
+
+        public static InvasionSolution ToSolution(SearchState state, ArmyBlueprint initialArmy, NationBlueprint initialNation)
+        {
+            SearchState currentState = state;
+            List<InvasionWave> invasionOrder = new List<InvasionWave>();
+            while (currentState.TransitionFromParent != null)
+            {
+                invasionOrder.Add(currentState.TransitionFromParent);
+                currentState = currentState.ParentProblem;
+            }
+            invasionOrder.Reverse();
+            return new InvasionSolution(initialArmy, initialNation,
+                state.Prob.InvadingArmy, state.Prob.NationBlueprint,
+                invasionOrder, state.IsSolved);
+        }
     }
 
     class SearchState
@@ -436,7 +510,10 @@ namespace InvasionSolver
                 foreach (ArmyBlueprint skeleton in mPriorityCache[invasionGroup.Size])
                 {
                     if (invasionGroup.Equals(skeleton))
+                    {
+                        Debug.Log("Found duplicate");
                         return true;
+                    }
                 }
             }
             return false;

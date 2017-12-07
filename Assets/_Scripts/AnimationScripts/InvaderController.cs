@@ -55,7 +55,7 @@ public class InvaderController : MonoBehaviour {
         {
             StartCoroutine(_ToggleToDeathImage(overSeconds));
         }
-        HealthBar.UpdateHealthBar(newHealth, overSeconds);
+        HealthBar.UpdateCurrentHealth(newHealth, overSeconds);
     }
 
     private IEnumerator _ToggleToDeathImage(float afterSeconds)

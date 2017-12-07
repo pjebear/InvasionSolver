@@ -30,14 +30,25 @@ namespace InvasionSolver
     {
         public const string FilePath = "InvasionSolution.xml";
 
-        [XmlElement("ArmyBlueprint", typeof(ArmyBlueprint))]
+        [XmlElement("InitialArmy", typeof(ArmyBlueprint))]
         public ArmyBlueprint InitialArmy { get; private set; }
 
-        [XmlElement("NationBlueprint", typeof(NationBlueprint))]
+        [XmlElement("InitialNation", typeof(NationBlueprint))]
         public NationBlueprint InitialNation { get; private set; }
+
+        [XmlElement("FinalArmy", typeof(ArmyBlueprint))]
+        public ArmyBlueprint FinalArmy { get; private set; }
+
+        [XmlElement("FinalNation", typeof(NationBlueprint))]
+        public NationBlueprint FinalNation { get; private set; }
 
         [XmlArray("InvasionOrder"), XmlArrayItem("InvasionWave", typeof(InvasionWave))]
         public List<InvasionWave> InvasionOrder;
+
+        [XmlElement("IsCompleteSolution", typeof(bool))]
+        public bool IsCompleteSolution { get; private set; }
+
+        public int NumTurnsToSolve { get { return InvasionOrder.Count; } }
 
         public InvasionSolution()
         {
@@ -46,11 +57,16 @@ namespace InvasionSolver
             InitialNation = null;
         }
 
-        public InvasionSolution(ArmyBlueprint initialArmy, NationBlueprint initialNation, List<InvasionWave> invasionOrder)
+        public InvasionSolution(ArmyBlueprint initialArmy, NationBlueprint initialNation,
+            ArmyBlueprint finalArmy, NationBlueprint finalNation,
+            List<InvasionWave> invasionOrder, bool isCompleteSolution)
         {
             InvasionOrder = invasionOrder;
             InitialArmy = initialArmy;
             InitialNation = initialNation;
+            FinalArmy = finalArmy;
+            FinalNation = finalNation;
+            IsCompleteSolution = isCompleteSolution;
         }
 
         public void Save(string filePath = FilePath)

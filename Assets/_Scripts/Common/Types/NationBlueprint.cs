@@ -13,31 +13,35 @@ namespace Common.Types
     {
         public bool IsDefeated { get { return mNumCapturedCities == Fortifications.Count; } }
         public int NumCitiesRemaining { get { return Fortifications.Count - mNumCapturedCities; } }
+
         [XmlArray("Fortifications"), XmlArrayItem("Fortification", typeof(Fortification))]
         public List<Fortification> Fortifications { get; private set; }
+
         [XmlAttribute("NationSize", typeof(int))]
         public int NationSize { get; private set; }
+
         private Dictionary<int, HashSet<int>> mInvasionOrderingsMap;
         private Dictionary<int, int> mNumProtectorsMap;
-        private Dictionary<int, bool> mIsCapturedMap;
+        [XmlIgnore()]
+        public Dictionary<int, bool> IsCapturedMap { get; private set; }
         private int mNumCapturedCities;
         private List<Fortification> mCachedBorderCities;
         private List<Fortification> mCachedInternalCities; // REMOVE LATER
-        private bool mLoadedFromFile = false;
+        private bool mLoadedFromFile = true;
 
         public NationBlueprint()
         {
             Fortifications = new List<Fortification>();
             mInvasionOrderingsMap = new Dictionary<int, HashSet<int>>();
             mNumProtectorsMap = new Dictionary<int, int>();
-            mIsCapturedMap = new Dictionary<int, bool>();
-            mLoadedFromFile = true;
+            IsCapturedMap = new Dictionary<int, bool>();
         }
 
         public NationBlueprint(int numFortifications)
         {
+            mLoadedFromFile = false;
             Fortifications = new List<Fortification>();
-            mIsCapturedMap = new Dictionary<int, bool>();
+            IsCapturedMap = new Dictionary<int, bool>();
             mNumCapturedCities = 0;
             mInvasionOrderingsMap = new Dictionary<int, HashSet<int>>();
             NationSize = 3;
@@ -45,13 +49,34 @@ namespace Common.Types
             PopulateFortifications(numFortifications);
         }
 
+        public NationBlueprint(bool[,] fortificationGrid)
+        {
+            mLoadedFromFile = false;
+            Fortifications = new List<Fortification>();
+            IsCapturedMap = new Dictionary<int, bool>();
+            mNumCapturedCities = 0;
+            mInvasionOrderingsMap = new Dictionary<int, HashSet<int>>();
+            NationSize = fortificationGrid.GetLength(0);
+            mNumProtectorsMap = new Dictionary<int, int>();
+            PopulateFortifications(fortificationGrid);
+        }
+
         public NationBlueprint(NationBlueprint previousNation, List<Fortification> captured)
         {
-            Fortifications = new List<Fortification>(previousNation.Fortifications); // keep a seperate copy if we want to change forts 
-            mIsCapturedMap = new Dictionary<int, bool>();
-            foreach (var capturedPair in previousNation.mIsCapturedMap)
+            mLoadedFromFile = false;
+            if (previousNation.mLoadedFromFile)
             {
-                mIsCapturedMap.Add(capturedPair.Key, capturedPair.Value);
+                previousNation.BeginInvasion(Vector2.right);
+            }
+            Fortifications = new List<Fortification>(); // keep a seperate copy if we want to change forts 
+            foreach (Fortification fort in previousNation.Fortifications)
+            {
+                Fortifications.Add(new Fortification(fort));
+            }
+            IsCapturedMap = new Dictionary<int, bool>();
+            foreach (var capturedPair in previousNation.IsCapturedMap)
+            {
+                IsCapturedMap.Add(capturedPair.Key, capturedPair.Value);
             }
 
             mInvasionOrderingsMap = previousNation.mInvasionOrderingsMap;
@@ -70,7 +95,18 @@ namespace Common.Types
                 {
                     mNumProtectorsMap[wasProtected]--;
                 }
-                mIsCapturedMap[fort.FortificationId] = true;
+                IsCapturedMap[fort.FortificationId] = true;
+            }
+
+            UpgradeUpgradeForts();
+        }
+
+        private void UpgradeUpgradeForts()
+        {
+            foreach (Fortification fort in Fortifications)
+            {
+                int numLevelsIncreased = mInvasionOrderingsMap[fort.FortificationId].Count > 0 ? 2 : 1;
+                fort.UpdgredFortifications(numLevelsIncreased);
             }
         }
 
@@ -81,7 +117,7 @@ namespace Common.Types
             {
                 foreach (Fortification fort in Fortifications)
                 {
-                    mIsCapturedMap.Add(fort.FortificationId, false); // all forts start off not captured
+                    IsCapturedMap.Add(fort.FortificationId, false); // all forts start off not captured
                     mNumProtectorsMap.Add(fort.FortificationId, 0);
                     mInvasionOrderingsMap.Add(fort.FortificationId, new HashSet<int>());
                 }
@@ -112,10 +148,9 @@ namespace Common.Types
                     {
                         columnsBehind = Mathf.Abs(protectionLine.y);
                     }
-                    Debug.Log("City " + protectedFortification.FortificationId + " is " + rowsBehind + " rows and " + columnsBehind + " columns behind City " + protectingFortification.FortificationId);
+
                     if (rowsBehind > 0 && columnsBehind <= rowsBehind)
                     {
-                        Debug.Log("Protected!");
                         mInvasionOrderingsMap[protectingFortification.FortificationId].Add(protectedFortification.FortificationId);
                         mNumProtectorsMap[protectedFortification.FortificationId]++;
                     }
@@ -131,7 +166,7 @@ namespace Common.Types
                 foreach (var protectionPair in mNumProtectorsMap)
                 {
                     if (protectionPair.Value == 0 // no protectors
-                        && !mIsCapturedMap[protectionPair.Key] // hasn't been captured yet
+                        && !IsCapturedMap[protectionPair.Key] // hasn't been captured yet
                         )
                     {
                         mCachedBorderCities.Add(Fortifications[protectionPair.Key]);
@@ -149,7 +184,7 @@ namespace Common.Types
                 foreach (var protectionPair in mNumProtectorsMap)
                 {
                     if (protectionPair.Value > 0 // no protectors
-                        && !mIsCapturedMap[protectionPair.Key] // hasn't been captured yet
+                        && !IsCapturedMap[protectionPair.Key] // hasn't been captured yet
                         )
                     {
                         mCachedInternalCities.Add(Fortifications[protectionPair.Key]);
@@ -185,7 +220,28 @@ namespace Common.Types
                     {
                         Fortification fort = new Fortification(product + column, Fortifications.Count);
                         Fortifications.Add(fort);
-                        mIsCapturedMap.Add(fort.FortificationId, false); // all forts start off not captured
+                        IsCapturedMap.Add(fort.FortificationId, false); // all forts start off not captured
+                        mNumProtectorsMap.Add(fort.FortificationId, 0);
+                        mInvasionOrderingsMap.Add(fort.FortificationId, new HashSet<int>());
+                    }
+                }
+            }
+        }
+
+        private void PopulateFortifications(bool[,] fortificationGrid)
+        {
+            int numGridElements = NationSize * NationSize;
+
+            for (int column = 0; column < NationSize; column++)
+            {
+                for (int row = 0; row < NationSize; row++)
+                {
+                    int product = row * NationSize;
+                    if (fortificationGrid[row,column])
+                    {
+                        Fortification fort = new Fortification(product + column, Fortifications.Count);
+                        Fortifications.Add(fort);
+                        IsCapturedMap.Add(fort.FortificationId, false); // all forts start off not captured
                         mNumProtectorsMap.Add(fort.FortificationId, 0);
                         mInvasionOrderingsMap.Add(fort.FortificationId, new HashSet<int>());
                     }

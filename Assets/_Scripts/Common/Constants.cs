@@ -5,6 +5,8 @@ namespace Common.Constants
 
     static class ArmyConstants
     {
+        public static ushort EQUALITY_RANGE = 5;
+
         public static ushort SOLDIER_OFFENSE = 50;
         public static ushort SOLDIER_HEALTH = 100;
         public static ushort SOLDIER_STACKING_DEFENCE = 2;
@@ -15,10 +17,10 @@ namespace Common.Constants
         public static ushort ARCHER_STACKING_OFFENSE = 2;
         private static InvasionPosition ARCHER_POSITION = InvasionPosition.Rear;
 
-        public static ushort HEALER_OFFENSE = 0;
+        public static ushort HEALER_OFFENSE = 5;
         public static ushort HEALER_HEALTH = 40;
-        public static ushort HEALER_HEALING = 10;
-        public static ushort HEALER_STACKING_HEALING = 1;
+        public static ushort HEALER_HEALING = 5;
+        public static ushort HEALER_STACKING_HEALING = 2;
         private static InvasionPosition HEALER_POSITION = InvasionPosition.Middle;
 
         public static ushort GetOffenseForInvader(InvaderType type)
@@ -71,15 +73,17 @@ namespace Common.Constants
     {
         private static ushort FORTIFICATION_DEFENSE = 80;
         private static ushort FORTIFICATION_OFFENSE = 100;
+        private static ushort FORTIFICATION_OFFENSE_UPDGRADE = 10;
+        private static ushort FORTIFICATION_DEFENSE_UPDGRADE = 12;
 
-        public static ushort GetFortificationOffense()
+        public static ushort GetFortificationOffense(int fortificationLevel)
         {
-            return FORTIFICATION_OFFENSE;
+            return (ushort)(FORTIFICATION_OFFENSE + fortificationLevel * FORTIFICATION_OFFENSE_UPDGRADE);
         }
 
-        public static ushort GetFortificationDefense()
+        public static ushort GetFortificationDefense(int fortificationLevel)
         {
-            return FORTIFICATION_DEFENSE;
+            return (ushort)(FORTIFICATION_DEFENSE + fortificationLevel * FORTIFICATION_DEFENSE_UPDGRADE);
         }
     }
 }

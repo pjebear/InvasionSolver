@@ -2,11 +2,11 @@
 using Common.Enums;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
+using UnityEngine;
 
 namespace Common.Types
 {
@@ -93,6 +93,13 @@ namespace Common.Types
             }
         }
 
+        public ArmyBlueprint()
+        {
+            Soldiers = new List<ushort>();
+            Healers = new List<ushort>();
+            Archers = new List<ushort>();
+        }
+
         // Only called when first making the army!!
         public ArmyBlueprint(int numSoldiers, int numHealers, int numArchers)
            : this()
@@ -113,7 +120,10 @@ namespace Common.Types
             {
                 Archers.Add(archerHealth);
             }
-            Debug.Assert(InitialArmyValue == 0);
+            if (InitialArmyValue != 0)
+            {
+                ;
+            }
             InitialArmyValue = CalculateArmyValue();
         }
 
@@ -163,27 +173,21 @@ namespace Common.Types
             return merged;
         }
 
-        public ArmyBlueprint()
-        {
-            Soldiers = new List<ushort>();
-            Healers = new List<ushort>();
-            Archers = new List<ushort>();
-        }
 
         public float CalculateArmyValue()
         {
             float armyValue = 0;
             foreach (ushort soldier in Soldiers)
             {
-                armyValue += 10 + soldier / (float)ArmyConstants.SOLDIER_HEALTH;
+                armyValue += 10f + (float)soldier / (float)ArmyConstants.SOLDIER_HEALTH;
             }
             foreach (ushort soldier in Healers)
             {
-                armyValue += 10 + soldier / (float)ArmyConstants.HEALER_HEALTH;
+                armyValue += 10f + (float)soldier / (float)ArmyConstants.HEALER_HEALTH;
             }
             foreach (ushort soldier in Archers)
             {
-                armyValue += 10 + soldier / (float)ArmyConstants.ARCHER_HEALTH;
+                armyValue += 10f + (float)soldier / (float)ArmyConstants.ARCHER_HEALTH;
             }
             return armyValue;
         }
@@ -196,21 +200,21 @@ namespace Common.Types
             {
                 for (int i = 0; i < Soldiers.Count; i++)
                 {
-                    if (Soldiers[i] != toCompare.Soldiers[i])
+                    if (Mathf.Abs(Soldiers[i] - toCompare.Soldiers[i]) > ArmyConstants.EQUALITY_RANGE)
                     {
                         return false;
                     }
                 }
                 for (int i = 0; i < Healers.Count; i++)
                 {
-                    if (Healers[i] != toCompare.Healers[i])
+                    if (Mathf.Abs(Healers[i] - toCompare.Healers[i]) > ArmyConstants.EQUALITY_RANGE)
                     {
                         return false;
                     }
                 }
                 for (int i = 0; i < Archers.Count; i++)
                 {
-                    if (Archers[i] != toCompare.Archers[i])
+                    if (Mathf.Abs(Archers[i] - toCompare.Archers[i]) > ArmyConstants.EQUALITY_RANGE)
                     {
                         return false;
                     }
@@ -239,7 +243,7 @@ namespace Common.Types
             {
                 outputString += invader + " ";
             }
-            return outputString + "}";
+            return outputString + "}\n";
         }
 
         public void Heal()

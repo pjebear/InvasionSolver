@@ -12,10 +12,14 @@ public class HealthBarAnimator : MonoBehaviour {
     public Text DeltaText;
     public Transform CurrentHealthBar;
 
+    private void Awake()
+    {
+        DeltaText.gameObject.SetActive(false);
+    }
+
     public void Initialize(float maxHealth)
     {
         mCurrentHealth = mMaxHealth = maxHealth;
-        DeltaText.gameObject.SetActive(false);
         DisplayHealthBar();
     }
 
@@ -29,7 +33,15 @@ public class HealthBarAnimator : MonoBehaviour {
 		
 	}
 
-    public void UpdateHealthBar(float newHealth, float overSeconds)
+    public void UpdateMaxHealth(float newMax, float overSeconds)
+    {
+        Debug.Assert(newMax > mMaxHealth);
+        mMaxHealth = newMax;
+        DisplayHealthBar();
+        StartCoroutine(_UpdateHealthBar(newMax, overSeconds));
+    }
+
+    public void UpdateCurrentHealth(float newHealth, float overSeconds)
     {
         if (newHealth != mCurrentHealth)
         {

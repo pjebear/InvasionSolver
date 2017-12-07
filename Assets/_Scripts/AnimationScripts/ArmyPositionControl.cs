@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-class ArmyPositionControl : MonoBehaviour
+public class ArmyPositionControl : MonoBehaviour
 {
     public InvaderController InvaderPrefab;
     public Vector2 BoundingArea;
@@ -15,6 +15,22 @@ class ArmyPositionControl : MonoBehaviour
     private void Awake()
     {
 
+    }
+
+    public void ResetArmy()
+    {
+        if (mInvaderControllers != null)
+        {
+            foreach (List<InvaderController> controllers in mInvaderControllers.Values)
+            {
+                foreach (InvaderController controller in controllers)
+                {
+                    Destroy(controller.gameObject);
+                }
+            }
+            mInvaderControllers.Clear();
+        }
+       
     }
 
     // Should only be called once when army is first being created

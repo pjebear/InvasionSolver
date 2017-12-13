@@ -38,7 +38,8 @@ public class AnimationManager : MonoBehaviour
     private bool mIsAutoSimulation;
     private bool mIsWaitingOnContinue;
 
-    public Text BannerText;
+    public Text WaveText;
+    public Text AnimationText;
 
 
     private void Awake()
@@ -77,6 +78,7 @@ public class AnimationManager : MonoBehaviour
 
     private IEnumerator _BeginAnimation(InvasionSolution defaultSolution, InvasionSolution optimizedSolution)
     {
+        AnimationText.text = "Sequential Invasion";
         mMainArmy.gameObject.SetActive(true);
 
         mMainArmy.ResetArmy();
@@ -84,6 +86,7 @@ public class AnimationManager : MonoBehaviour
         mMainArmy.Initialize(defaultSolution.InitialArmy);
         NationController.InitializeNation(defaultSolution.InitialNation);
         yield return AnimateInvasion(defaultSolution);
+        AnimationText.text = "Parallel Invasion";
         mMainArmy.ResetArmy();
         mMainArmy.Initialize(optimizedSolution.InitialArmy);
         NationController.ResetNation();
@@ -109,7 +112,7 @@ public class AnimationManager : MonoBehaviour
         List<InvasionWave> bestSolution = solution.InvasionOrder;
         for (int i = 0; i < bestSolution.Count; ++i)
         {
-            BannerText.text = "WAVE " + (i + 1);
+            WaveText.text = "WAVE " + (i + 1);
             List<AssaultTemplate> attackWave = bestSolution[i].Wave;
             Debug.Assert(DefaultArmyNumber >= attackWave.Count);
             List<ArmyBlueprint> subArmies = new List<ArmyBlueprint>();
@@ -143,7 +146,8 @@ public class AnimationManager : MonoBehaviour
             NationController.UpgradeForts(reformAnimationDuration);
             yield return _WaitForInputAfterAnimation(reformAnimationDuration * 1.5f);
         }
-        BannerText.text = "Invasion Complete!";
+        WaveText.text = "Invasion Complete!";
+        yield return new WaitForSeconds(reformAnimationDuration * 1.5f);
     }
 
     private void FormSubArmies(List<ArmyBlueprint> subArmies, float animationSpeed)

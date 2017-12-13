@@ -12,7 +12,7 @@ namespace InvasionSolver
     {
         public const string FILE_PATH = "InvasionResults.xml";
         // add optimization bools
-        public float SearchTimeSeconds { get; private set; }
+        public float SearchTimeSeconds;
         public long NumLeafsCreated { get; private set; }
         public long NumSolutionsFound { get; private set; }
         public InvasionSolution DefaultSolution { get; private set; }
@@ -23,11 +23,11 @@ namespace InvasionSolver
             // empty for serialization
         }
 
-        public SearchResults(float searchTimeSeconds, long numLeafsCreated, long numSolutionsFound, 
+        public SearchResults(long numLeafsCreated, long numSolutionsFound, 
              InvasionSolution defaultSolution,
              InvasionSolution optimizedSolution)
         {
-            SearchTimeSeconds = searchTimeSeconds;
+            SearchTimeSeconds = -1;
             NumLeafsCreated = numLeafsCreated;
             NumSolutionsFound = numSolutionsFound;
             DefaultSolution = defaultSolution;
@@ -58,6 +58,9 @@ namespace InvasionSolver
         private int mMaxDepthOfTree;
         private bool mPruneSolutions; // optimization
 
+        public long OpenLeafCount { get { return mOpenLeafs.Count; } }
+        public long SolutionsFound { get { return mNumSolutionsFound; } }
+
         private LinkedList<SearchState> mOpenLeafs;
         private long mNumLeafsCreated;
         private long mNumSolutionsFound;
@@ -71,6 +74,9 @@ namespace InvasionSolver
 
         private ArmyBlueprint mInitialArmy;
         private NationBlueprint mInitialNation;
+
+        private float mCurrentCompletionPercent;
+        private float mPercentTier;
 
         public AndTree()
         {
@@ -120,16 +126,16 @@ namespace InvasionSolver
             mBestSolution = null;
             mBestPartialSolution = null;
 
-            float searchStartTime = Time.realtimeSinceStartup;
+            
             mOpenLeafs.AddLast(initialState);
-            mNumLeafsCreated = 1;
+
             while (mOpenLeafs.Count > 0)
             {
                 SearchState pop = mOpenLeafs.Last.Value;
                 mOpenLeafs.RemoveLast();
                 Search(pop, false);
             }
-            float optimizedSearchDuration = Time.realtimeSinceStartup - searchStartTime;
+            
 
             // Record optimized Solution
             InvasionSolution optimizedSolution = null;
@@ -143,7 +149,7 @@ namespace InvasionSolver
             }
 
             int bestOptimizedDepth = optimizedSolution != null ? mBestSolutionDepth : -1;
-            return new SearchResults(optimizedSearchDuration, mNumLeafsCreated, mNumSolutionsFound, 
+            return new SearchResults(mNumLeafsCreated, mNumSolutionsFound, 
                  defaultSolution, optimizedSolution);
         }
 
@@ -151,6 +157,8 @@ namespace InvasionSolver
         {
             if (chosenState.IsSolved)
             {
+                mNumLeafsCreated++;
+
                 #region SolutionFound
                 bool updateSolution = false;
                 bool recordSolution = false;
@@ -250,6 +258,10 @@ namespace InvasionSolver
                     {
                         mOpenLeafs.AddLast(subProblem);
                     }
+                }
+                else
+                {
+                    mNumLeafsCreated++;
                 }
             }
         }
@@ -511,7 +523,6 @@ namespace InvasionSolver
                 {
                     if (invasionGroup.Equals(skeleton))
                     {
-                        Debug.Log("Found duplicate");
                         return true;
                     }
                 }

@@ -3,6 +3,7 @@ using InvasionSolver;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -23,12 +24,17 @@ public class MainControl : MonoBehaviour {
     public GameObject InvasionAnimationParent;
     public AnimationManager AnimationManager;
 
+    private Thread mSimulationThread;
     private AndTree mAndTree;
+    private NationBlueprint mInitialNation;
+    private ArmyBlueprint mInitialInvaders;
     private SearchResults mSearchResults;
+    private bool mSearchComplete;
 
     // Use this for initialization
     void Start()
     {
+        mSearchComplete = true;
         NewOrLoadButtonParent.gameObject.SetActive(true);
         InvasionInputParent.gameObject.SetActive(false);
         InvasionAnimationParent.gameObject.SetActive(false);
@@ -51,24 +57,47 @@ public class MainControl : MonoBehaviour {
 
     public void BeginSimulation()
     {
+        Debug.Assert(mSearchComplete);
         InvasionInputParent.gameObject.SetActive(false);
-        InvasionResultsParent.SetActive(false);
-        InvasionAnimationParent.gameObject.SetActive(true);
+        InvasionAnimationParent.gameObject.SetActive(false);
+        InvasionResultsParent.SetActive(true);
 
-        ArmyBlueprint army = new ArmyBlueprint(SoldierCounter.InvaderCount, HealerCounter.InvaderCount, ArcherCounter.InvaderCount);
-        NationBlueprint nation = new NationBlueprint(NationLayoutController.GetNationLayout());
+        mInitialInvaders = new ArmyBlueprint(SoldierCounter.InvaderCount, HealerCounter.InvaderCount, ArcherCounter.InvaderCount);
+        mInitialNation = new NationBlueprint(NationLayoutController.GetNationLayout());
+        StartCoroutine(_BeginSimulation());
+    }
 
+    private IEnumerator _BeginSimulation()
+    {
         mAndTree = new AndTree();
-        mSearchResults = mAndTree.SearchForSolutions(army, nation, true);
+        mSearchComplete = false;
+        mSimulationThread = new Thread(new ThreadStart(SimulationThread));
+        float searchStartTime = Time.realtimeSinceStartup;
+        mSimulationThread.Start();
+        StartCoroutine(_DisplaySimulationProgress());
+        yield return new WaitWhile(() => { return !mSearchComplete; });
+        float searchDuration = Time.realtimeSinceStartup - searchStartTime;
+        mSearchResults.SearchTimeSeconds = searchDuration;
 
         InvasionResultsParent.SetActive(true);
         ResultsDisplay.DisplayResults(mSearchResults);
         mSearchResults.Save();
     }
 
+    private IEnumerator _DisplaySimulationProgress()
+    {
+        do
+        {
+            ResultsDisplay.UpdateSearch(mAndTree.OpenLeafCount, mAndTree.SolutionsFound);
+            yield return new WaitForSeconds(0.5f);
+        }
+        while (!mSearchComplete);
+    }
+
     public void BeginAnimation()
     {
         InvasionResultsParent.SetActive(false);
+        InvasionAnimationParent.gameObject.SetActive(true);
         AnimationManager.BeginAnimation(mSearchResults.DefaultSolution, mSearchResults.OptimizedSolution);
     }
 
@@ -78,5 +107,19 @@ public class MainControl : MonoBehaviour {
         NewOrLoadButtonParent.gameObject.SetActive(false);
         InvasionAnimationParent.gameObject.SetActive(true);
         BeginAnimation();
+    }
+
+    private void SimulationThread()
+    {
+        mSearchResults = mAndTree.SearchForSolutions(mInitialInvaders, mInitialNation, true);
+        mSearchComplete = true;
+    }
+
+    private void OnApplicationQuit()
+    {
+        if (mSimulationThread != null)
+        {
+            mSimulationThread.Abort();
+        }
     }
 }

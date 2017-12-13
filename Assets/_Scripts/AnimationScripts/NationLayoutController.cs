@@ -102,7 +102,8 @@ public class NationLayoutController : MonoBehaviour {
             mCurrentLayout = newLayout;
             for (int layout = 0; layout < NUM_LAYOUTS; layout++)
             {
-                NationLayoutSelectors[layout].interactable = layout != mCurrentLayout;
+                NationLayoutSelectors[layout].GetComponent<Image>().color =
+                    layout == mCurrentLayout ? Color.white : Color.white - new Color(0, 0, 0, .5f);
             }
         }
 

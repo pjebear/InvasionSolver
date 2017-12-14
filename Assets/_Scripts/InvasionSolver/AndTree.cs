@@ -72,6 +72,8 @@ namespace InvasionSolver
         private int mBestSolutionDepth;
         private InvasionSolution mBestSolution;
 
+        private static bool mIsOptimized;
+
         private ArmyBlueprint mInitialArmy;
         private NationBlueprint mInitialNation;
 
@@ -83,10 +85,11 @@ namespace InvasionSolver
             mOpenLeafs = new  LinkedList<SearchState>();
         }
 
-        public SearchResults SearchForSolutions(ArmyBlueprint attackers, NationBlueprint defenders, bool keepOnlyBest)
+        public SearchResults SearchForSolutions(ArmyBlueprint attackers, NationBlueprint defenders, bool optimize)
         {
             mInitialArmy = attackers;
             mInitialNation = defenders;
+            mIsOptimized = false;
 
             // Initialize start variables and start invasion search
             SearchState initialState = new SearchState(attackers, defenders, 0, null, null);
@@ -121,7 +124,7 @@ namespace InvasionSolver
             Debug.Log("Best Case Group Scenario took " + mMaxDepthOfTree + " turns to complete, needing " + (mMaxDepthOfTree - initialState.Prob.NationBlueprint.NumCitiesRemaining) + " turns to heal");
 			
             // reset search variables for the optimized search
-            mPruneSolutions = keepOnlyBest;
+            mPruneSolutions = optimize;
             mOpenLeafs.Clear();
             mBestSolution = null;
             mBestPartialSolution = null;
@@ -168,7 +171,7 @@ namespace InvasionSolver
                 if (mBestSolution == null)
                 {
                     recordSolution = updateSolution = true;
-                    if (mPruneSolutions)
+                    if (mIsOptimized)
                     {
                         mMaxDepthOfTree = numStepsInInvasion;
                     }
@@ -178,7 +181,7 @@ namespace InvasionSolver
                     recordSolution = updateSolution = true;
                     mBestSolution = null;
                     // reset solution tracking
-                    if (mPruneSolutions)
+                    if (mIsOptimized)
                     {
                         mNumSolutionsFound = 0;
                         mMaxDepthOfTree = numStepsInInvasion;
@@ -194,7 +197,7 @@ namespace InvasionSolver
                 }
                 else // worse tier
                 {
-                    recordSolution = !mPruneSolutions;
+                    recordSolution = !mIsOptimized;
                 }
                 
                 if (recordSolution)
@@ -245,7 +248,7 @@ namespace InvasionSolver
                     }
                 }
                 // past our max depth
-                if (mMaxDepthOfTree != -1 && chosenState.Depth >= mMaxDepthOfTree)
+                if (mMaxDepthOfTree != -1 && mIsOptimized && chosenState.Depth >= mMaxDepthOfTree)
                 {
                     validState = false;
                 }
@@ -304,14 +307,14 @@ namespace InvasionSolver
             // all cities are of same dificulty for now so just choose the first
             Fortification hardestCity = fortifications[0];
             // Since damage doesn't increase over time, if the army can't take the city now it will never be able to
-            if (invadingArmy.Damage < hardestCity.Defense) 
+            if (!mIsOptimized && invadingArmy.Damage < hardestCity.Defense) 
             {
                 return problemDivisions;
             }
             // If the army is strong enough to take the city but doesn't have enough health, 
             // and it either can't heal, or it's max health even after healing wont be enough to take the city,
             // abandon this search
-            else if (invadingArmy.Health <= hardestCity.Offense
+            else if (!mIsOptimized && invadingArmy.Health <= hardestCity.Offense
                 && !(invadingArmy.CanHeal && invadingArmy.MaxHealth > hardestCity.Offense))
             {
 
@@ -410,7 +413,7 @@ namespace InvasionSolver
                         InvasionWave recursiveTransitionCopy = new InvasionWave(currentWave.Wave);
                         RecurseFdiv(remainingArmy, currentGroup + 1, toCapture, recursiveTransitionCopy, possibleInvasionWaves, keepArmyTogether);
                     }
-                    else if (!invasionCache.IsCached(subArmy))
+                    else if (!mIsOptimized || !invasionCache.IsCached(subArmy))
                     {
                         AssaultTemplate assaultTemplate = AssaultTemplate.GetAssualtTemplate(toCapture[currentGroup], subArmy);
                         if (assaultTemplate != null /* is valid assault */)

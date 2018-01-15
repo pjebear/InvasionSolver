@@ -4,6 +4,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
+// Animation controll class that is assigned an army template and is incharge of moving units into, and scaling units to a 
+// specific bounding box.
+
 public class ArmyPositionControl : MonoBehaviour
 {
     public InvaderController InvaderPrefab;
@@ -58,6 +62,7 @@ public class ArmyPositionControl : MonoBehaviour
         LayoutArmy(); // create at position in army
     }
 
+    // Merge all sub armies into this army. Resize and move units
     public void Initialize(List<ArmyPositionControl> subArmies, float overSeconds)
     {
         Debug.Assert(overSeconds > 0);
@@ -125,6 +130,8 @@ public class ArmyPositionControl : MonoBehaviour
         mInvaderControllers.Add(InvaderType.Healer, new List<InvaderController>());
     }
 
+    // Find the closest fit for units into a bounding area, scaling the size of the units and finding optimal layout
+    // in the bounding area. Moves the units to the bounding area once a size is found
     private void LayoutArmy(float overSeconds = 0)
     {
         mInvaderControllerDimensions = InvaderPrefab.GetComponent<RectTransform>().rect.size;
@@ -134,7 +141,7 @@ public class ArmyPositionControl : MonoBehaviour
         int numArchers = mInvaderControllers[InvaderType.Archer].Count;
         int numHealers = mInvaderControllers[InvaderType.Healer].Count;
         int numSoldiers = mInvaderControllers[InvaderType.Soldier].Count;
-        int errorBreak = 10;
+        int errorBreak = 10; // upper limit of resizing
         while (errorBreak-- > 0)
         {
             unitsPerColumn = Mathf.FloorToInt(BoundingArea.y / mInvaderControllerDimensions.y);
@@ -197,6 +204,7 @@ public class ArmyPositionControl : MonoBehaviour
         }
     }
 
+    // given sub army blueprints, find corresponding controllers in the current army and assign to a sub army controller
     public List<Dictionary<InvaderType, List<InvaderController>>> SplitIntoSubArmies(List<ArmyBlueprint> armyCompositions)
     {
         List<Dictionary<InvaderType, List<InvaderController>>> subArmyControllers = new List<Dictionary<InvaderType, List<InvaderController>>>();
